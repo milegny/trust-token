@@ -187,3 +187,213 @@ model TrustToken {
   @@index([mintAddress])
   @@index([userId])
 }
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  ESCALATED
+  RESOLVED
+  CLOSED
+  REJECTED
+}
+
+enum DisputeType {
+  REPUTATION_CARD
+  ORDER
+  PRODUCT
+  USER_CONDUCT
+}
+
+enum DisputeSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ModeratorLevel {
+  COMMUNITY
+  SENIOR
+  ADMIN
+}
+
+model Dispute {
+  id                String            @id @default(uuid())
+  
+  // Parties involved
+  reporterId        String
+  reportedId        String
+  
+  // Dispute details
+  type              DisputeType
+  severity          DisputeSeverity   @default(MEDIUM)
+  status            DisputeStatus     @default(OPEN)
+  subject           String
+  description       String
+  
+  // Related entities
+  orderId           String?
+  reputationCardId  String?
+  productId         String?
+  
+  // Assignment
+  assignedTo        String?
+  moderatorLevel    ModeratorLevel    @default(COMMUNITY)
+  
+  // Resolution
+  resolution        String?
+  resolutionType    String?
+  resolutionNotes   String?
+  resolvedAt        DateTime?
+  
+  // Blockchain
+  txSignature       String?           @unique
+  
+  // Timestamps
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  
+  // Relations
+  evidence          DisputeEvidence[]
+  comments          DisputeComment[]
+  actions           DisputeAction[]
+  votes             DisputeVote[]
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([assignedTo])
+  @@index([status])
+  @@index([type])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+enum EvidenceType {
+  IMAGE
+  DOCUMENT
+  SCREENSHOT
+  TRANSACTION
+  MESSAGE
+  OTHER
+}
+
+model DisputeEvidence {
+  id              String          @id @default(uuid())
+  disputeId       String
+  dispute         Dispute         @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  uploadedBy      String
+  type            EvidenceType
+  url             String
+  description     String?
+  metadata        Json?
+  
+  createdAt       DateTime        @default(now())
+
+  @@index([disputeId])
+  @@index([uploadedBy])
+}
+
+model DisputeComment {
+  id              String          @id @default(uuid())
+  disputeId       String
+  dispute         Dispute         @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  authorId        String
+  content         String
+  isInternal      Boolean         @default(false)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([disputeId])
+  @@index([authorId])
+}
+
+enum ActionType {
+  CREATED
+  ASSIGNED
+  EVIDENCE_ADDED
+  COMMENT_ADDED
+  STATUS_CHANGED
+  ESCALATED
+  RESOLVED
+  CLOSED
+  REOPENED
+}
+
+model DisputeAction {
+  id              String          @id @default(uuid())
+  disputeId       String
+  dispute         Dispute         @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  performedBy     String
+  actionType      ActionType
+  details         Json?
+  
+  createdAt       DateTime        @default(now())
+
+  @@index([disputeId])
+  @@index([performedBy])
+  @@index([actionType])
+}
+
+model DisputeVote {
+  id              String          @id @default(uuid())
+  disputeId       String
+  dispute         Dispute         @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  
+  voterId         String
+  approved        Boolean
+  reasoning       String?
+  weight          Int             @default(1)
+  
+  createdAt       DateTime        @default(now())
+
+  @@unique([disputeId, voterId])
+  @@index([disputeId])
+  @@index([voterId])
+}
+
+model ModeratorStats {
+  id                    String          @id @default(uuid())
+  moderatorId           String          @unique
+  
+  level                 ModeratorLevel  @default(COMMUNITY)
+  disputesResolved      Int             @default(0)
+  totalEarned           Float           @default(0)
+  currentMonthEarned    Float           @default(0)
+  points                Int             @default(0)
+  badges                Json            @default("[]")
+  rank                  Int             @default(0)
+  
+  // Performance metrics
+  averageResolutionTime Float?
+  accuracyRate          Float?
+  
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  @@index([moderatorId])
+  @@index([level])
+  @@index([rank])
+}
+
+model DisputeStatistics {
+  id                      String          @id @default(uuid())
+  period                  String          @unique
+  
+  totalDisputes           Int             @default(0)
+  openDisputes            Int             @default(0)
+  resolvedDisputes        Int             @default(0)
+  averageResolutionTime   Float?
+  resolutionRate          Float?
+  
+  disputesByType          Json            @default("{}")
+  disputesBySeverity      Json            @default("{}")
+  
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  @@index([period])
+}

@@ -12,6 +12,7 @@ import reviewsRouter from './routes/reviews';
 import recommendationsRouter from './routes/recommendations';
 import trusttokenRouter from './routes/trusttoken';
 import reputationcardsRouter from './routes/reputationcards';
+import disputesRouter from './routes/disputes';
 
 // Import utilities
 import { checkProgramsOnStartup } from './utils/programVerification';
@@ -48,6 +49,7 @@ app.use('/api/reviews', reviewsRouter);
 app.use('/api/recommendations', recommendationsRouter);
 app.use('/api/trusttoken', trusttokenRouter);
 app.use('/api/reputationcards', reputationcardsRouter);
+app.use('/api/disputes', disputesRouter);
 
 // 404 handler
 app.use((req: Request, res: Response) => {
