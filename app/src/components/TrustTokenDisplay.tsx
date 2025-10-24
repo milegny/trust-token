@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
+import { TRUST_TOKEN_PROGRAM_ID } from '../config/constants';
 import './TrustTokenDisplay.css';
 
 interface TrustTokenData {
@@ -17,7 +18,7 @@ export const TrustTokenDisplay: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const PROGRAM_ID = new PublicKey('3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju');
+  const PROGRAM_ID = TRUST_TOKEN_PROGRAM_ID;
 
   useEffect(() => {
     if (!publicKey) {

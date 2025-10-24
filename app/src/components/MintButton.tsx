@@ -3,11 +3,12 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Keypair, SystemProgram, SYSVAR_RENT_PUBKEY } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from '@solana/spl-token';
 import { AnchorProvider, Program } from '@coral-xyz/anchor';
+import { TRUST_TOKEN_PROGRAM_ID } from '../config/constants';
 import IDL from '../idl/trust_token.json';
 import './MintButton.css';
 
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey('metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s');
-const PROGRAM_ID = new PublicKey('3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju');
+const PROGRAM_ID = TRUST_TOKEN_PROGRAM_ID;
 
 interface Props {
   onMintSuccess: () => void;

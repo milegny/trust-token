@@ -3,14 +3,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/api';
+import TransactionFlow from '../components/TransactionFlow';
+import { useNotifications, notifySuccess, notifyError } from '../components/NotificationSystem';
+
+interface PendingTransaction {
+  orderId: string;
+  product: any;
+  quantity: number;
+  totalAmount: number;
+}
 
 const Cart: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, clearCart, getTotalPrice } = useCart();
   const { publicKey } = useWallet();
   const navigate = useNavigate();
+  const { addNotification } = useNotifications();
   const [shippingAddress, setShippingAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingTransactions, setPendingTransactions] = useState<PendingTransaction[]>([]);
+  const [showTransactionFlow, setShowTransactionFlow] = useState(false);
 
   const handleCheckout = async () => {
     if (!publicKey) {
@@ -57,16 +69,82 @@ const Cart: React.FC = () => {
         )
       );
 
+      // Create pending transactions for each order
+      const transactions: PendingTransaction[] = orders.map((order, index) => {
+        const items = Object.values(itemsBySeller)[index];
+        const product = items[0].product; // For simplicity, using first product
+        const quantity = items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalAmount = items.reduce(
+          (sum, item) => sum + item.product.price * item.quantity,
+          0
+        );
+
+        return {
+          orderId: order.id,
+          product,
+          quantity,
+          totalAmount,
+        };
+      });
+
+      setPendingTransactions(transactions);
+      setShowTransactionFlow(true);
       clearCart();
-      alert(`Successfully created ${orders.length} order(s)!`);
-      navigate('/orders');
+
+      notifySuccess(
+        addNotification,
+        'Orders Created!',
+        `Successfully created ${orders.length} order(s). Please complete payment.`
+      );
     } catch (err: any) {
       console.error('Checkout error:', err);
-      setError(err.response?.data?.error || 'Failed to create order. Please try again.');
+      const errorMsg = err.response?.data?.error || 'Failed to create order. Please try again.';
+      setError(errorMsg);
+      notifyError(addNotification, 'Checkout Failed', errorMsg);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleTransactionComplete = () => {
+    setPendingTransactions((prev) => prev.slice(1));
+    if (pendingTransactions.length <= 1) {
+      setShowTransactionFlow(false);
+      notifySuccess(
+        addNotification,
+        'All Transactions Complete!',
+        'Thank you for your purchases!'
+      );
+      navigate('/orders');
+    }
+  };
+
+  const handleTransactionCancel = () => {
+    setShowTransactionFlow(false);
+    setPendingTransactions([]);
+  };
+
+  // Show transaction flow if there are pending transactions
+  if (showTransactionFlow && pendingTransactions.length > 0) {
+    const currentTransaction = pendingTransactions[0];
+    return (
+      <div style={{ padding: '20px' }}>
+        {pendingTransactions.length > 1 && (
+          <div style={styles.transactionProgress}>
+            Processing transaction {pendingTransactions.length - pendingTransactions.indexOf(currentTransaction)} of {pendingTransactions.length}
+          </div>
+        )}
+        <TransactionFlow
+          orderId={currentTransaction.orderId}
+          product={currentTransaction.product}
+          quantity={currentTransaction.quantity}
+          totalAmount={currentTransaction.totalAmount}
+          onComplete={handleTransactionComplete}
+          onCancel={handleTransactionCancel}
+        />
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
@@ -244,6 +322,18 @@ const Cart: React.FC = () => {
       </div>
     </div>
   );
+};
+
+const styles = {
+  transactionProgress: {
+    padding: '15px',
+    backgroundColor: '#eff6ff',
+    color: '#1e40af',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    textAlign: 'center' as const,
+    fontWeight: 'bold' as const,
+  },
 };
 
 export default Cart;

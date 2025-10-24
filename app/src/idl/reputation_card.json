@@ -1,0 +1,932 @@
+{
+  "address": "FmZBiFUHHtGQioU11V9asYiJGP5wDdrLqoikzAyEyRtc",
+  "metadata": {
+    "name": "reputation_card",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Reputation card system for The Bit Central marketplace"
+  },
+  "instructions": [
+    {
+      "name": "create_card",
+      "docs": [
+        "Create a reputation card for a recipient",
+        "An issuer (verified user) can issue a reputation card to another user.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for card creation",
+        "* `card_type` - The type of reputation (e.g., Trustworthy, QualityProducts)",
+        "* `message` - Optional message from the issuer",
+        "* `rating` - Rating from 1-5",
+        "",
+        "# Security",
+        "- Issuer must have a verified TrustToken",
+        "- Recipient must exist (have a wallet)",
+        "- Card is stored on-chain with immutable issuer/recipient"
+      ],
+      "discriminator": [
+        29,
+        242,
+        127,
+        8,
+        241,
+        109,
+        219,
+        100
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "docs": [
+            "The user issuing the card (must be verified)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "The recipient of the card"
+          ]
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "reputation_card",
+          "docs": [
+            "The reputation card account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "issuer"
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              },
+              {
+                "kind": "account",
+                "path": "program_state.total_cards_issued",
+                "account": "ProgramState"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "card_type",
+          "type": {
+            "defined": {
+              "name": "CardType"
+            }
+          }
+        },
+        {
+          "name": "message",
+          "type": "string"
+        },
+        {
+          "name": "rating",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "dispute_card",
+      "docs": [
+        "Dispute a reputation card",
+        "The recipient can dispute a card issued to them.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for dispute",
+        "* `dispute_reason` - Reason for the dispute",
+        "",
+        "# Security",
+        "- Only the recipient can dispute a card",
+        "- Card must be in Active status"
+      ],
+      "discriminator": [
+        119,
+        36,
+        58,
+        113,
+        226,
+        160,
+        146,
+        44
+      ],
+      "accounts": [
+        {
+          "name": "recipient",
+          "docs": [
+            "The recipient who is disputing the card"
+          ],
+          "signer": true
+        },
+        {
+          "name": "reputation_card",
+          "docs": [
+            "The reputation card to dispute"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.issuer",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.recipient",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.card_number",
+                "account": "ReputationCard"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "dispute_reason",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Initialize the ReputationCard program",
+        "Sets up the program state with the authority who can manage the system.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for initialization",
+        "",
+        "# Security",
+        "- Only callable once due to the `init` constraint on program_state",
+        "- Authority is set to the signer of this transaction"
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that will control the program"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "restore_card",
+      "docs": [
+        "Restore a revoked card",
+        "The issuer can restore a card they previously revoked.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for restoration",
+        "",
+        "# Security",
+        "- Only the original issuer can restore their card",
+        "- Card must be in Revoked status"
+      ],
+      "discriminator": [
+        187,
+        73,
+        125,
+        174,
+        73,
+        220,
+        232,
+        121
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "docs": [
+            "The issuer who is restoring the card"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "reputation_card",
+          "docs": [
+            "The reputation card to restore"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.issuer",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.recipient",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.card_number",
+                "account": "ReputationCard"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "revoke_card",
+      "docs": [
+        "Revoke a reputation card",
+        "The issuer can revoke a card they previously issued.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for revocation",
+        "* `reason` - Optional reason for revocation",
+        "",
+        "# Security",
+        "- Only the original issuer can revoke their card",
+        "- Card must be in Active status"
+      ],
+      "discriminator": [
+        253,
+        177,
+        31,
+        41,
+        4,
+        5,
+        237,
+        223
+      ],
+      "accounts": [
+        {
+          "name": "issuer",
+          "docs": [
+            "The issuer who is revoking the card"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "reputation_card",
+          "docs": [
+            "The reputation card to revoke"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.issuer",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.recipient",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.card_number",
+                "account": "ReputationCard"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "reason",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_card_status",
+      "docs": [
+        "Update card status (admin function)",
+        "The program authority can update the status of any card.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for status update",
+        "* `new_status` - The new status to set",
+        "",
+        "# Security",
+        "- Only the program authority can call this",
+        "- Used for moderation and dispute resolution"
+      ],
+      "discriminator": [
+        210,
+        71,
+        52,
+        242,
+        19,
+        58,
+        147,
+        229
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The program authority"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "reputation_card",
+          "docs": [
+            "The reputation card to update"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  101,
+                  112,
+                  117,
+                  116,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  95,
+                  99,
+                  97,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.issuer",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.recipient",
+                "account": "ReputationCard"
+              },
+              {
+                "kind": "account",
+                "path": "reputation_card.card_number",
+                "account": "ReputationCard"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_status",
+          "type": {
+            "defined": {
+              "name": "CardStatus"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProgramState",
+      "discriminator": [
+        77,
+        209,
+        137,
+        229,
+        149,
+        67,
+        167,
+        230
+      ]
+    },
+    {
+      "name": "ReputationCard",
+      "discriminator": [
+        195,
+        146,
+        0,
+        247,
+        113,
+        104,
+        155,
+        210
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidRating",
+      "msg": "Rating must be between 1 and 5"
+    },
+    {
+      "code": 6001,
+      "name": "MessageTooLong",
+      "msg": "Message must be 500 characters or less"
+    },
+    {
+      "code": 6002,
+      "name": "UnauthorizedRevoke",
+      "msg": "Only the issuer can revoke this card"
+    },
+    {
+      "code": 6003,
+      "name": "UnauthorizedRestore",
+      "msg": "Only the issuer can restore this card"
+    },
+    {
+      "code": 6004,
+      "name": "UnauthorizedUpdate",
+      "msg": "Only the program authority can update card status"
+    },
+    {
+      "code": 6005,
+      "name": "UnauthorizedDispute",
+      "msg": "Only the recipient can dispute this card"
+    },
+    {
+      "code": 6006,
+      "name": "CardNotActive",
+      "msg": "Card is not in Active status"
+    },
+    {
+      "code": 6007,
+      "name": "CardNotRevoked",
+      "msg": "Card is not in Revoked status"
+    },
+    {
+      "code": 6008,
+      "name": "ReasonTooLong",
+      "msg": "Revocation reason must be 200 characters or less"
+    },
+    {
+      "code": 6009,
+      "name": "DisputeReasonTooLong",
+      "msg": "Dispute reason must be 500 characters or less"
+    },
+    {
+      "code": 6010,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow occurred"
+    },
+    {
+      "code": 6011,
+      "name": "Underflow",
+      "msg": "Arithmetic underflow occurred"
+    }
+  ],
+  "types": [
+    {
+      "name": "CardStatus",
+      "docs": [
+        "Status of a reputation card"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Revoked"
+          },
+          {
+            "name": "Disputed"
+          },
+          {
+            "name": "Suspended"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CardType",
+      "docs": [
+        "Types of reputation cards"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Trustworthy"
+          },
+          {
+            "name": "QualityProducts"
+          },
+          {
+            "name": "FastShipping"
+          },
+          {
+            "name": "GoodCommunication"
+          },
+          {
+            "name": "FairPricing"
+          },
+          {
+            "name": "Reliable"
+          },
+          {
+            "name": "Professional"
+          },
+          {
+            "name": "Responsive"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramState",
+      "docs": [
+        "Program state account that stores global configuration"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "The authority that can manage the program"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_cards_issued",
+            "docs": [
+              "Total number of reputation cards issued"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "total_cards_revoked",
+            "docs": [
+              "Total number of cards revoked"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ReputationCard",
+      "docs": [
+        "Reputation card account"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "issuer",
+            "docs": [
+              "The user who issued this card"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "The user who received this card"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "card_type",
+            "docs": [
+              "Type of reputation"
+            ],
+            "type": {
+              "defined": {
+                "name": "CardType"
+              }
+            }
+          },
+          {
+            "name": "message",
+            "docs": [
+              "Message from the issuer"
+            ],
+            "type": "string"
+          },
+          {
+            "name": "rating",
+            "docs": [
+              "Rating (1-5)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "status",
+            "docs": [
+              "Current status of the card"
+            ],
+            "type": {
+              "defined": {
+                "name": "CardStatus"
+              }
+            }
+          },
+          {
+            "name": "issued_at",
+            "docs": [
+              "When the card was issued"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "revoked_at",
+            "docs": [
+              "When the card was revoked (if applicable)"
+            ],
+            "type": {
+              "option": "i64"
+            }
+          },
+          {
+            "name": "revocation_reason",
+            "docs": [
+              "Reason for revocation (if applicable)"
+            ],
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "dispute_reason",
+            "docs": [
+              "Reason for dispute (if applicable)"
+            ],
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "card_number",
+            "docs": [
+              "Unique card number"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    }
+  ]
+}

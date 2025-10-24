@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getProduct, getUserReviews } from '../services/api';
 import { Product, Review } from '../types';
 import { useCart } from '../context/CartContext';
+import SellerReputationBadge from '../components/SellerReputationBadge';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -108,22 +109,16 @@ const ProductDetail: React.FC = () => {
             {product.price} {product.currency}
           </div>
           
-          <div style={{ margin: '20px 0', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px' }}>
-            <h3 style={{ margin: '0 0 10px 0' }}>Seller Information</h3>
-            <Link to={`/profile/${product.seller.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <p style={{ margin: '5px 0' }}>
-                <strong>{product.seller.username || product.seller.walletAddress.substring(0, 16)}</strong>
-                {product.seller.isVerified && (
-                  <span style={{ color: '#14F195', marginLeft: '10px' }}>✓ Verified</span>
-                )}
-              </p>
-              <p style={{ margin: '5px 0' }}>
-                Reputation: {product.seller.reputationScore.toFixed(1)} ⭐
-              </p>
-              <p style={{ margin: '5px 0', fontSize: '14px', color: '#666' }}>
-                {reviews.length} reviews
-              </p>
-            </Link>
+          {/* Seller Reputation Badge */}
+          <div style={{ margin: '20px 0' }}>
+            <SellerReputationBadge
+              sellerId={product.seller.id}
+              sellerWallet={product.seller.walletAddress}
+              sellerUsername={product.seller.username}
+              isVerified={product.seller.isVerified}
+              reputationScore={product.seller.reputationScore}
+              showCards={true}
+            />
           </div>
 
           <div style={{ margin: '20px 0' }}>

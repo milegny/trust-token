@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { getProducts, getCategories } from '../services/api';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
+import SellerReputationBadge from '../components/SellerReputationBadge';
+import { sortByReputation, filterByMinReputation, getReputationIcon } from '../utils/reputationCalculator';
 
 const ProductList: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -15,6 +17,8 @@ const ProductList: React.FC = () => {
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
   const page = parseInt(searchParams.get('page') || '1');
+  const sortBy = searchParams.get('sortBy') || '';
+  const minReputation = parseFloat(searchParams.get('minReputation') || '0');
 
   useEffect(() => {
     loadProducts();
@@ -30,7 +34,22 @@ const ProductList: React.FC = () => {
         page,
         limit: 12,
       });
-      setProducts(data.products);
+      
+      let filteredProducts = data.products;
+      
+      // Apply reputation filter
+      if (minReputation > 0) {
+        filteredProducts = filterByMinReputation(filteredProducts, minReputation);
+      }
+      
+      // Apply sorting
+      if (sortBy === 'reputation-high') {
+        filteredProducts = sortByReputation(filteredProducts, 'desc');
+      } else if (sortBy === 'reputation-low') {
+        filteredProducts = sortByReputation(filteredProducts, 'asc');
+      }
+      
+      setProducts(filteredProducts);
       setError(null);
     } catch (err) {
       setError('Failed to load products');
@@ -58,6 +77,24 @@ const ProductList: React.FC = () => {
     const formData = new FormData(e.currentTarget);
     const searchTerm = formData.get('search') as string;
     setSearchParams({ search: searchTerm, page: '1' });
+  };
+
+  const handleSortChange = (sort: string) => {
+    const params: any = { page: '1' };
+    if (category) params.category = category;
+    if (search) params.search = search;
+    if (minReputation > 0) params.minReputation = minReputation.toString();
+    if (sort) params.sortBy = sort;
+    setSearchParams(params);
+  };
+
+  const handleReputationFilter = (minRep: number) => {
+    const params: any = { page: '1' };
+    if (category) params.category = category;
+    if (search) params.search = search;
+    if (sortBy) params.sortBy = sortBy;
+    if (minRep > 0) params.minReputation = minRep.toString();
+    setSearchParams(params);
   };
 
   if (loading) {
@@ -110,39 +147,124 @@ const ProductList: React.FC = () => {
         </button>
       </form>
 
-      {/* Categories */}
+      {/* Filters and Sorting */}
       <div style={{ marginBottom: '30px' }}>
-        <button
-          onClick={() => handleCategoryChange('')}
-          style={{
-            padding: '8px 16px',
-            margin: '5px',
-            backgroundColor: !category ? '#9945FF' : '#f0f0f0',
-            color: !category ? 'white' : 'black',
-            border: 'none',
-            borderRadius: '20px',
-            cursor: 'pointer',
-          }}
-        >
-          All
-        </button>
-        {categories.map((cat) => (
+        {/* Categories */}
+        <div style={{ marginBottom: '15px' }}>
+          <strong style={{ marginRight: '10px' }}>Category:</strong>
           <button
-            key={cat.name}
-            onClick={() => handleCategoryChange(cat.name)}
+            onClick={() => handleCategoryChange('')}
             style={{
               padding: '8px 16px',
               margin: '5px',
-              backgroundColor: category === cat.name ? '#9945FF' : '#f0f0f0',
-              color: category === cat.name ? 'white' : 'black',
+              backgroundColor: !category ? '#9945FF' : '#f0f0f0',
+              color: !category ? 'white' : 'black',
               border: 'none',
               borderRadius: '20px',
               cursor: 'pointer',
             }}
           >
-            {cat.name} ({cat.count})
+            All
           </button>
-        ))}
+          {categories.map((cat) => (
+            <button
+              key={cat.name}
+              onClick={() => handleCategoryChange(cat.name)}
+              style={{
+                padding: '8px 16px',
+                margin: '5px',
+                backgroundColor: category === cat.name ? '#9945FF' : '#f0f0f0',
+                color: category === cat.name ? 'white' : 'black',
+                border: 'none',
+                borderRadius: '20px',
+                cursor: 'pointer',
+              }}
+            >
+              {cat.name} ({cat.count})
+            </button>
+          ))}
+        </div>
+
+        {/* Reputation Filter */}
+        <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <strong>Min Reputation:</strong>
+          <button
+            onClick={() => handleReputationFilter(0)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: minReputation === 0 ? '#9945FF' : '#f0f0f0',
+              color: minReputation === 0 ? 'white' : 'black',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            All
+          </button>
+          <button
+            onClick={() => handleReputationFilter(3.0)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: minReputation === 3.0 ? '#9945FF' : '#f0f0f0',
+              color: minReputation === 3.0 ? 'white' : 'black',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            👌 3.0+
+          </button>
+          <button
+            onClick={() => handleReputationFilter(4.0)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: minReputation === 4.0 ? '#9945FF' : '#f0f0f0',
+              color: minReputation === 4.0 ? 'white' : 'black',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            ⭐ 4.0+
+          </button>
+          <button
+            onClick={() => handleReputationFilter(4.5)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: minReputation === 4.5 ? '#9945FF' : '#f0f0f0',
+              color: minReputation === 4.5 ? 'white' : 'black',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            🌟 4.5+
+          </button>
+        </div>
+
+        {/* Sort Options */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <strong>Sort by:</strong>
+          <select
+            value={sortBy}
+            onChange={(e) => handleSortChange(e.target.value)}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+            }}
+          >
+            <option value="">Default</option>
+            <option value="reputation-high">Reputation: High to Low</option>
+            <option value="reputation-low">Reputation: Low to High</option>
+          </select>
+        </div>
       </div>
 
       {/* Products Grid */}
@@ -185,11 +307,24 @@ const ProductList: React.FC = () => {
                       Stock: {product.stock}
                     </span>
                   </div>
-                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
-                    Seller: {product.seller.username || product.seller.walletAddress.substring(0, 8)}
-                    {product.seller.isVerified && (
-                      <span style={{ color: '#14F195', marginLeft: '5px' }}>✓ Verified</span>
-                    )}
+                  <div style={{ marginTop: '10px', fontSize: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '4px' }}>
+                      <span style={{ color: '#666' }}>
+                        Seller: {product.seller.username || product.seller.walletAddress.substring(0, 8)}
+                      </span>
+                      {product.seller.isVerified && (
+                        <span style={{ color: '#14F195' }}>✓</span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>{getReputationIcon(product.seller.reputationScore)}</span>
+                      <span style={{ fontWeight: '600', color: '#9945FF' }}>
+                        {product.seller.reputationScore.toFixed(1)}
+                      </span>
+                      <span style={{ color: '#999', fontSize: '11px' }}>
+                        reputation
+                      </span>
+                    </div>
                   </div>
                 </div>
               </Link>

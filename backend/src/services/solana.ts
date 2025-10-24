@@ -1,9 +1,10 @@
 import { Connection, PublicKey, Keypair, Transaction } from '@solana/web3.js';
 import { AnchorProvider, Program, Wallet } from '@coral-xyz/anchor';
 import idl from '../idl/trust_token.json';
+import { TRUST_TOKEN_PROGRAM_ID, SOLANA_RPC_URL } from '../config/constants';
 
-const PROGRAM_ID = new PublicKey(process.env.TRUST_TOKEN_PROGRAM_ID || '3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju');
-const RPC_URL = process.env.SOLANA_RPC_URL || 'https://api.devnet.solana.com';
+const PROGRAM_ID = TRUST_TOKEN_PROGRAM_ID;
+const RPC_URL = SOLANA_RPC_URL;
 
 export class SolanaService {
   private connection: Connection;

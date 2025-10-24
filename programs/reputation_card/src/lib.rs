@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-// This will be updated after deployment
-declare_id!("11111111111111111111111111111111");
+// Program ID from devnet deployment
+declare_id!("FmZBiFUHHtGQioU11V9asYiJGP5wDdrLqoikzAyEyRtc");
 
 #[program]
 pub mod reputation_card {

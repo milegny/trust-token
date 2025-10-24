@@ -13,6 +13,9 @@ import recommendationsRouter from './routes/recommendations';
 import trusttokenRouter from './routes/trusttoken';
 import reputationcardsRouter from './routes/reputationcards';
 
+// Import utilities
+import { checkProgramsOnStartup } from './utils/programVerification';
+
 dotenv.config();
 
 const app: Application = express();
@@ -61,10 +64,14 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔗 Solana Network: ${process.env.SOLANA_NETWORK || 'devnet'}`);
+  console.log('');
+  
+  // Check Solana programs on startup
+  await checkProgramsOnStartup();
 });
 
 export default app;
