@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String          @id @default(uuid())
+  walletAddress     String          @unique
+  username          String?         @unique
+  email             String?         @unique
+  bio               String?
+  avatarUrl         String?
+  trustTokenMint    String?         @unique
+  isVerified        Boolean         @default(false)
+  reputationScore   Float           @default(0)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  products          Product[]
+  orders            Order[]         @relation("BuyerOrders")
+  sales             Order[]         @relation("SellerOrders")
+  reviewsGiven      Review[]        @relation("ReviewsGiven")
+  reviewsReceived   Review[]        @relation("ReviewsReceived")
+  recommendationsGiven Recommendation[] @relation("RecommendationsGiven")
+  recommendationsReceived Recommendation[] @relation("RecommendationsReceived")
+
+  @@index([walletAddress])
+  @@index([trustTokenMint])
+}
+
+model Product {
+  id              String          @id @default(uuid())
+  sellerId        String
+  seller          User            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  name            String
+  description     String
+  price           Float
+  currency        String          @default("SOL")
+  category        String
+  images          String[]
+  stock           Int             @default(0)
+  isActive        Boolean         @default(true)
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  orderItems      OrderItem[]
+
+  @@index([sellerId])
+  @@index([category])
+  @@index([isActive])
+}
+
+enum OrderStatus {
+  CREATED
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  COMPLETED
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id              String          @id @default(uuid())
+  buyerId         String
+  buyer           User            @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId        String
+  seller          User            @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Cascade)
+  
+  status          OrderStatus     @default(CREATED)
+  totalAmount     Float
+  currency        String          @default("SOL")
+  
+  shippingAddress String?
+  trackingNumber  String?
+  
+  txSignature     String?         @unique
+  escrowAccount   String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  paidAt          DateTime?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+
+  items           OrderItem[]
+  review          Review?
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([status])
+  @@index([txSignature])
+}
+
+model OrderItem {
+  id              String          @id @default(uuid())
+  orderId         String
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  quantity        Int
+  priceAtPurchase Float
+  
+  createdAt       DateTime        @default(now())
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Review {
+  id              String          @id @default(uuid())
+  orderId         String          @unique
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewerId      String
+  reviewer        User            @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId      String
+  reviewee        User            @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  
+  rating          Int
+  comment         String?
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([reviewerId])
+  @@index([revieweeId])
+  @@index([orderId])
+}
+
+enum RecommendationType {
+  TRUSTWORTHY
+  QUALITY_PRODUCTS
+  FAST_SHIPPING
+  GOOD_COMMUNICATION
+  FAIR_PRICING
+}
+
+model Recommendation {
+  id              String              @id @default(uuid())
+  issuerId        String
+  issuer          User                @relation("RecommendationsGiven", fields: [issuerId], references: [id], onDelete: Cascade)
+  recipientId     String
+  recipient       User                @relation("RecommendationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  
+  type            RecommendationType
+  message         String?
+  isActive        Boolean             @default(true)
+  
+  txSignature     String?             @unique
+  
+  createdAt       DateTime            @default(now())
+  revokedAt       DateTime?
+
+  @@index([issuerId])
+  @@index([recipientId])
+  @@index([isActive])
+}
+
+model TrustToken {
+  id              String          @id @default(uuid())
+  userId          String          @unique
+  mintAddress     String          @unique
+  
+  name            String
+  symbol          String
+  uri             String
+  
+  isVerified      Boolean         @default(true)
+  mintedAt        DateTime        @default(now())
+  revokedAt       DateTime?
+  
+  txSignature     String?         @unique
+
+  @@index([mintAddress])
+  @@index([userId])
+}

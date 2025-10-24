@@ -7,9 +7,11 @@ skip-lint = false
 
 [programs.localnet]
 trust_token = "3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju"
+reputation_card = "11111111111111111111111111111111"
 
 [programs.devnet]
 trust_token = "3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju"
+reputation_card = "11111111111111111111111111111111"
 
 [registry]
 url = "https://api.apr.dev"

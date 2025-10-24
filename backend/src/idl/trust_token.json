@@ -1,0 +1,648 @@
+{
+  "address": "3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju",
+  "metadata": {
+    "name": "trust_token",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "initialize",
+      "docs": [
+        "Initialize the TrustToken program",
+        "This function sets up the program state and can only be called once by the authority.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for initialization",
+        "",
+        "# Security",
+        "- Only callable once due to the `init` constraint on program_state",
+        "- Authority is set to the signer of this transaction"
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that will control the program"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account - stores global configuration",
+            "Seeds ensure only one program state can exist"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "mint",
+      "docs": [
+        "Mint a TrustToken NFT to a user",
+        "This function creates a new NFT representing a verified identity for the user.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for minting",
+        "* `name` - The name of the NFT (e.g., \"Trust Token #1\")",
+        "* `symbol` - The symbol of the NFT (e.g., \"TRUST\")",
+        "* `uri` - The metadata URI pointing to off-chain data",
+        "",
+        "# Security",
+        "- Users can self-mint their own verification tokens",
+        "- Each mint creates a unique NFT with supply of 1",
+        "- Master edition ensures true NFT (non-fungible) properties"
+      ],
+      "discriminator": [
+        51,
+        57,
+        225,
+        47,
+        182,
+        146,
+        137,
+        166
+      ],
+      "accounts": [
+        {
+          "name": "minter",
+          "docs": [
+            "The user minting the token (pays for everything and receives the NFT)"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The mint account for the NFT",
+            "Each TrustToken gets a unique mint"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_account",
+          "docs": [
+            "The token account that will hold the NFT",
+            "Uses associated token account for standardization"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "minter"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "trust_token",
+          "docs": [
+            "TrustToken data account",
+            "Stores verification status and metadata"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  117,
+                  115,
+                  116,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadata",
+          "docs": [
+            "Metadata account for the NFT"
+          ],
+          "writable": true
+        },
+        {
+          "name": "master_edition",
+          "docs": [
+            "Master edition account for the NFT"
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "restore_verification",
+      "docs": [
+        "Restore verification status of a TrustToken",
+        "This allows the authority to restore a user's verified status.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for restoration",
+        "",
+        "# Security",
+        "- Only the program authority can restore verification"
+      ],
+      "discriminator": [
+        165,
+        70,
+        20,
+        180,
+        111,
+        67,
+        94,
+        91
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that can restore verification"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "trust_token",
+          "docs": [
+            "The TrustToken account to restore"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  117,
+                  115,
+                  116,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "trust_token.mint",
+                "account": "TrustToken"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "revoke_verification",
+      "docs": [
+        "Revoke verification status of a TrustToken",
+        "This allows the authority to revoke a user's verified status without burning the NFT.",
+        "",
+        "# Arguments",
+        "* `ctx` - The context containing all accounts needed for revocation",
+        "",
+        "# Security",
+        "- Only the program authority can revoke verification"
+      ],
+      "discriminator": [
+        114,
+        179,
+        245,
+        243,
+        239,
+        182,
+        200,
+        73
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "docs": [
+            "The authority that can revoke verification"
+          ],
+          "signer": true
+        },
+        {
+          "name": "program_state",
+          "docs": [
+            "Program state account"
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  115,
+                  116,
+                  97,
+                  116,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "trust_token",
+          "docs": [
+            "The TrustToken account to revoke"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  117,
+                  115,
+                  116,
+                  95,
+                  116,
+                  111,
+                  107,
+                  101,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "trust_token.mint",
+                "account": "TrustToken"
+              }
+            ]
+          }
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProgramState",
+      "discriminator": [
+        77,
+        209,
+        137,
+        229,
+        149,
+        67,
+        167,
+        230
+      ]
+    },
+    {
+      "name": "TrustToken",
+      "discriminator": [
+        51,
+        7,
+        193,
+        104,
+        187,
+        165,
+        39,
+        129
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "UnauthorizedMint",
+      "msg": "Only the program authority can mint TrustTokens"
+    },
+    {
+      "code": 6001,
+      "name": "UnauthorizedRevoke",
+      "msg": "Only the program authority can revoke verification"
+    },
+    {
+      "code": 6002,
+      "name": "UnauthorizedRestore",
+      "msg": "Only the program authority can restore verification"
+    },
+    {
+      "code": 6003,
+      "name": "NameTooLong",
+      "msg": "Name must be 32 characters or less"
+    },
+    {
+      "code": 6004,
+      "name": "SymbolTooLong",
+      "msg": "Symbol must be 10 characters or less"
+    },
+    {
+      "code": 6005,
+      "name": "UriTooLong",
+      "msg": "URI must be 200 characters or less"
+    },
+    {
+      "code": 6006,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow occurred"
+    }
+  ],
+  "types": [
+    {
+      "name": "ProgramState",
+      "docs": [
+        "Program state account that stores global configuration"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "docs": [
+              "The authority that can mint and manage TrustTokens"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "total_minted",
+            "docs": [
+              "Total number of TrustTokens minted"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TrustToken",
+      "docs": [
+        "TrustToken account that stores NFT-specific data",
+        "This account is created for each minted TrustToken and stores verification status"
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": [
+              "The owner of this TrustToken"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "The mint address of this TrustToken NFT"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "is_verified",
+            "docs": [
+              "Whether this token represents a verified user"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "minted_at",
+            "docs": [
+              "Timestamp when the token was minted"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    }
+  ]
+}

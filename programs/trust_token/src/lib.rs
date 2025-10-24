@@ -5,7 +5,7 @@ use anchor_spl::{
         create_master_edition_v3, create_metadata_accounts_v3, CreateMasterEditionV3,
         CreateMetadataAccountsV3, Metadata, mpl_token_metadata::types::{Creator, DataV2},
     },
-    token::{mint_to, Mint, MintTo, Token, TokenAccount},
+    token::{mint_to, freeze_account, burn, Mint, MintTo, Token, TokenAccount, FreezeAccount, Burn},
 };
 
 declare_id!("3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju");
@@ -32,8 +32,9 @@ pub mod trust_token {
         Ok(())
     }
 
-    /// Mint a TrustToken NFT to a user
+    /// Mint a Soulbound TrustToken NFT to a user
     /// This function creates a new NFT representing a verified identity for the user.
+    /// The NFT is SOULBOUND - it cannot be transferred and is frozen to the minter's wallet.
     /// 
     /// # Arguments
     /// * `ctx` - The context containing all accounts needed for minting
@@ -45,6 +46,7 @@ pub mod trust_token {
     /// - Users can self-mint their own verification tokens
     /// - Each mint creates a unique NFT with supply of 1
     /// - Master edition ensures true NFT (non-fungible) properties
+    /// - Token account is FROZEN immediately after minting (Soulbound)
     pub fn mint(
         ctx: Context<MintTrustToken>,
         name: String,
@@ -66,6 +68,18 @@ pub mod trust_token {
             },
         );
         mint_to(cpi_context, 1)?;
+
+        // SOULBOUND: Freeze the token account immediately after minting
+        // This prevents any transfers, making the NFT permanently bound to this wallet
+        let freeze_cpi_context = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            FreezeAccount {
+                account: ctx.accounts.token_account.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                authority: ctx.accounts.minter.to_account_info(),
+            },
+        );
+        freeze_account(freeze_cpi_context)?;
 
         // Create metadata account for the NFT
         let creator = vec![Creator {
@@ -179,6 +193,83 @@ pub mod trust_token {
         trust_token.is_verified = true;
 
         msg!("Verification restored for TrustToken: {}", trust_token.mint);
+        Ok(())
+    }
+
+    /// Verify that a TrustToken is still bound to its original owner
+    /// This checks if the token is in the correct wallet and hasn't been transferred.
+    /// If the token has been moved, it can be burned by the authority.
+    /// 
+    /// # Arguments
+    /// * `ctx` - The context containing all accounts needed for verification
+    /// 
+    /// # Returns
+    /// - Ok(()) if the token is still bound to the original owner
+    /// - Error if the token has been transferred
+    pub fn verify_soulbound(ctx: Context<VerifySoulbound>) -> Result<()> {
+        let trust_token = &ctx.accounts.trust_token;
+        let token_account = &ctx.accounts.token_account;
+
+        // Check if the token account owner matches the original TrustToken owner
+        require!(
+            token_account.owner == trust_token.owner,
+            TrustTokenError::TokenTransferred
+        );
+
+        // Check if the token account is frozen (should always be frozen for soulbound)
+        require!(
+            token_account.is_frozen(),
+            TrustTokenError::TokenNotFrozen
+        );
+
+        // Check if the token account has exactly 1 token
+        require!(
+            token_account.amount == 1,
+            TrustTokenError::InvalidTokenAmount
+        );
+
+        msg!("TrustToken {} is properly soulbound to {}", trust_token.mint, trust_token.owner);
+        Ok(())
+    }
+
+    /// Burn a TrustToken that has been transferred (violating soulbound property)
+    /// This can only be called by the program authority as a security measure.
+    /// 
+    /// # Arguments
+    /// * `ctx` - The context containing all accounts needed for burning
+    /// 
+    /// # Security
+    /// - Only the program authority can burn tokens
+    /// - This is used to enforce the soulbound property
+    pub fn burn_transferred_token(ctx: Context<BurnTransferredToken>) -> Result<()> {
+        // Security check: Only authority can burn
+        require!(
+            ctx.accounts.authority.key() == ctx.accounts.program_state.authority,
+            TrustTokenError::UnauthorizedBurn
+        );
+
+        let trust_token = &ctx.accounts.trust_token;
+        let token_account = &ctx.accounts.token_account;
+
+        // Verify that the token has indeed been transferred (not in original owner's wallet)
+        require!(
+            token_account.owner != trust_token.owner,
+            TrustTokenError::TokenNotTransferred
+        );
+
+        // Burn the token
+        let cpi_context = CpiContext::new(
+            ctx.accounts.token_program.to_account_info(),
+            Burn {
+                mint: ctx.accounts.mint.to_account_info(),
+                from: ctx.accounts.token_account.to_account_info(),
+                authority: ctx.accounts.authority.to_account_info(),
+            },
+        );
+        burn(cpi_context, 1)?;
+
+        msg!("Burned transferred TrustToken: {} (was transferred from {})", 
+            trust_token.mint, trust_token.owner);
         Ok(())
     }
 }
@@ -359,6 +450,60 @@ pub struct RestoreVerification<'info> {
     pub trust_token: Account<'info, TrustToken>,
 }
 
+/// Context for verifying soulbound status
+#[derive(Accounts)]
+pub struct VerifySoulbound<'info> {
+    /// The TrustToken account to verify
+    #[account(
+        seeds = [b"trust_token", trust_token.mint.as_ref()],
+        bump,
+    )]
+    pub trust_token: Account<'info, TrustToken>,
+
+    /// The mint account
+    pub mint: Account<'info, Mint>,
+
+    /// The token account to verify
+    #[account(
+        associated_token::mint = mint,
+        associated_token::authority = trust_token.owner,
+    )]
+    pub token_account: Account<'info, TokenAccount>,
+}
+
+/// Context for burning a transferred token
+#[derive(Accounts)]
+pub struct BurnTransferredToken<'info> {
+    /// The authority that can burn tokens
+    #[account(mut)]
+    pub authority: Signer<'info>,
+
+    /// Program state account
+    #[account(
+        seeds = [b"program_state"],
+        bump
+    )]
+    pub program_state: Account<'info, ProgramState>,
+
+    /// The TrustToken account
+    #[account(
+        mut,
+        seeds = [b"trust_token", trust_token.mint.as_ref()],
+        bump,
+    )]
+    pub trust_token: Account<'info, TrustToken>,
+
+    /// The mint account
+    #[account(mut)]
+    pub mint: Account<'info, Mint>,
+
+    /// The token account containing the transferred token
+    #[account(mut)]
+    pub token_account: Account<'info, TokenAccount>,
+
+    pub token_program: Program<'info, Token>,
+}
+
 // ============================================================================
 // Error Codes
 // ============================================================================
@@ -375,6 +520,9 @@ pub enum TrustTokenError {
     #[msg("Only the program authority can restore verification")]
     UnauthorizedRestore,
 
+    #[msg("Only the program authority can burn tokens")]
+    UnauthorizedBurn,
+
     #[msg("Name must be 32 characters or less")]
     NameTooLong,
 
@@ -386,4 +534,16 @@ pub enum TrustTokenError {
 
     #[msg("Arithmetic overflow occurred")]
     Overflow,
+
+    #[msg("TrustToken has been transferred and is no longer soulbound")]
+    TokenTransferred,
+
+    #[msg("TrustToken is not frozen - soulbound tokens must be frozen")]
+    TokenNotFrozen,
+
+    #[msg("Invalid token amount - should be exactly 1")]
+    InvalidTokenAmount,
+
+    #[msg("Token has not been transferred - cannot burn")]
+    TokenNotTransferred,
 }
