@@ -1,0 +1,147 @@
+.mint-button-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.mint-button {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1.25rem 2rem;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mint-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.mint-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mint-button.disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.mint-button.minting {
+  background: #4a5568;
+  cursor: wait;
+}
+
+.spinner-small {
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+}
+
+.success-message-box {
+  background: white;
+  border: 2px solid #48bb78;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.success-message-box h3 {
+  color: #22543d;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.success-message-box p {
+  color: #4a5568;
+  margin: 0 0 1rem 0;
+}
+
+.tx-link {
+  display: inline-block;
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.tx-link:hover {
+  color: #2b6cb0;
+}
+
+.error-message-box {
+  background: #fff5f5;
+  border: 2px solid #fc8181;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.error-message-box p {
+  color: #c53030;
+  margin: 0 0 0.75rem 0;
+  font-weight: 600;
+}
+
+.retry-small {
+  background: #f56565;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-small:hover {
+  background: #c53030;
+}
+
+.mint-info {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+  border-left: 4px solid #4299e1;
+}
+
+.info-text {
+  color: #4a5568;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.cost-text {
+  color: #718096;
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

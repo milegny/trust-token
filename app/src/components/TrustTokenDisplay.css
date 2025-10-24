@@ -1,0 +1,174 @@
+.trust-token-display {
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.info-box,
+.success-box,
+.error-box {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.info-box {
+  text-align: center;
+  border: 2px dashed #cbd5e0;
+}
+
+.info-box p {
+  margin: 0.5rem 0;
+  color: #4a5568;
+  font-size: 1.1rem;
+}
+
+.subtitle {
+  font-size: 0.9rem !important;
+  color: #718096 !important;
+}
+
+.success-box {
+  border: 2px solid #48bb78;
+}
+
+.error-box {
+  border: 2px solid #f56565;
+  text-align: center;
+}
+
+.error-box p {
+  color: #c53030;
+  margin-bottom: 1rem;
+}
+
+.nft-badge {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.badge-icon {
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.nft-badge h2 {
+  margin: 0;
+  color: #2d3748;
+  font-size: 1.8rem;
+}
+
+.token-details {
+  background: #f7fafc;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.value {
+  color: #2d3748;
+}
+
+.mono {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.status.verified {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status.not-verified {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.marketplace-status {
+  background: #edf2f7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.success-message {
+  color: #22543d;
+  font-weight: 600;
+  margin: 0;
+}
+
+.warning-message {
+  color: #c53030;
+  font-weight: 600;
+  margin: 0;
+}
+
+.explorer-link {
+  display: block;
+  text-align: center;
+  color: #4299e1;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.explorer-link:hover {
+  color: #2b6cb0;
+}
+
+.retry-button {
+  background: #4299e1;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retry-button:hover {
+  background: #2b6cb0;
+}
+
+.spinner {
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #4299e1;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
