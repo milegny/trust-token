@@ -1,0 +1,20 @@
+[package]
+name = "insurance_pool"
+version = "0.1.0"
+description = "Insurance pool for marketplace transaction protection"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "insurance_pool"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+idl-build = ["anchor-lang/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"

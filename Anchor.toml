@@ -8,10 +8,12 @@ skip-lint = false
 [programs.localnet]
 trust_token = "3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju"
 reputation_card = "FmZBiFUHHtGQioU11V9asYiJGP5wDdrLqoikzAyEyRtc"
+insurance_pool = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
 [programs.devnet]
 trust_token = "3gUohiKvtQGZ2gXdimtvtVxy3JEFC9mTs3fLuo4ox5Ju"
 reputation_card = "FmZBiFUHHtGQioU11V9asYiJGP5wDdrLqoikzAyEyRtc"
+insurance_pool = "Fg6PaFpoGXkYsidMpWTK6W2BeZ7FEfcYkg476zPFsLnS"
 
 [registry]
 url = "https://api.apr.dev"
